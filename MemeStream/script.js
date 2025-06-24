@@ -22,10 +22,15 @@ async function loadMemes() {
 function showRandom() {
   if (!memes.length) return;
   const url = memes[Math.floor(Math.random() * memes.length)];
+  // Use the Images.Weserv CDN as a CORS proxy
+  const proxyBase = 'https://images.weserv.nl/?url=';
+  // strip off the protocol so weserv can reattach it
+  const proxiedUrl = proxyBase + url.replace(/^https?:\/\//, '');
+
   imgEl.crossOrigin = 'anonymous';
-  imgEl.src = url;
+  imgEl.src         = proxiedUrl;
   capEl.textContent = '';
-  inputEl.value = '';                   
+  inputEl.value     = '';
 }        
 
 // Live caption update
