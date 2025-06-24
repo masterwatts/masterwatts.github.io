@@ -16,16 +16,17 @@ async function loadMemes() {
     showRandom();
   } catch (e) {
     console.error('Failed to load memes', e);
-  }
-}
+    }
+}                   
 
 function showRandom() {
   if (!memes.length) return;
   const url = memes[Math.floor(Math.random() * memes.length)];
+  imgEl.crossOrigin = 'anonymous';
   imgEl.src = url;
   capEl.textContent = '';
-  inputEl.value = '';
-}
+  inputEl.value = '';                   
+}        
 
 // Live caption update
 inputEl.addEventListener('input', e => {
@@ -35,11 +36,24 @@ inputEl.addEventListener('input', e => {
 newBtn.addEventListener('click', showRandom);
 
 dlBtn.addEventListener('click', () => {
-  html2canvas(document.getElementById('meme')).then(canvas => {
-    const link = document.createElement('a');
-    link.download = 'meme.png';
-    link.href = canvas.toDataURL();
-    link.click();
+  let meme = document.getElementById('meme');
+  html2canvas(meme, {
+    useCORS: true,
+    allowTaint: false,
+    scrollX: 0,
+    scrollY: 0,
+    width: meme.getBoundingClientRect().width,
+    height: meme.getBoundingClientRect().height
+  }).then(canvas => {
+    canvas.toBlob(blob => {
+      const link = document.createElement('a');
+      link.download = `MemeStream ${new Date().toDateString()}`
+      link.href = URL.createObjectURL(blob);
+      document.body.appendChild(link);
+      link.click();
+      URL.revokeObjectURL(link.href);
+      link.remove();
+    }, 'image/png');
   });
 });
 
