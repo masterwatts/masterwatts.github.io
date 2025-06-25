@@ -7,27 +7,36 @@ const dlBtn = document.getElementById('download');
 
 // Fetch top memes of the day
 async function loadMemes() {
-  try {
-    const res = await fetch('https://www.reddit.com/r/memes/top.json?limit=50&t=day');
-    const json = await res.json();
-    memes = json.data.children
-      .map(c => c.data.url)
-      .filter(url => /\.(jpg|png|gif)$/.test(url));
-    showRandom();
-  } catch (e) {
-    console.error('Failed to load memes', e);
+  let success = false;
+  let attempts = 0;
+
+  while (!success && attempts < 10) {
+    try {
+      const res = await fetch('https://www.reddit.com/r/memes/top.json?limit=50&t=day');
+      const json = await res.json();
+      memes = json.data.children
+        .map(c => c.data.url)
+        .filter(url => /\.(jpg|png|gif)$/.test(url));
+      showRandom();
+      success = true;
+    } catch (e) {
+      console.error('Failed to load memes', e);
     }
+    attempts++;
+    if (success) break;
+  }
 }                   
 
 function showRandom() {
   if (!memes.length) return;
   const url = memes[Math.floor(Math.random() * memes.length)];
-  // Use the Images.Weserv CDN as a CORS proxy
+  // Use the Images.weserv.nl CDN as a CORS proxy
   const proxyBase = 'https://images.weserv.nl/?url=';
-  // strip off the protocol so weserv can reattach it
-  const proxiedUrl = proxyBase + url.replace(/^https?:\/\//, '');
+  // Remove protocol (http[s]://) for weserv
+  const urlNoProtocol = url.replace(/^https?:\/\//, '');
+  const proxiedUrl = proxyBase + encodeURIComponent(urlNoProtocol);
 
-  imgEl.crossOrigin = 'anonymous';
+// imgEl.crossOrigin = 'anonymous'; // Not needed when using a CORS proxy
   imgEl.src         = proxiedUrl;
   capEl.textContent = '';
   inputEl.value     = '';
